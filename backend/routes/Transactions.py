@@ -57,13 +57,14 @@ def Create_Transaction(current_user: UserDep, db: SessionDep, transaction_data: 
         db.add(seller_rating)
         db.add(bider_rating)
         db.commit()
+        db.refresh(seller_rating)
+        db.refresh(bider_rating)
 
         return {
             'username': new_transaction.bider.username,
             'email': new_transaction.bider.email,
             'phone_no': new_transaction.bider.phone_no
         }
-    except:
-        db.rollback()
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Transction failed!")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Transction failed! because of {str(e)}")
     

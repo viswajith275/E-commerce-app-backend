@@ -335,7 +335,7 @@ class Rating(Base):
     rater_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
     rated_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
 
-    score: Mapped[int] = mapped_column(nullable=True)
+    score: Mapped[Optional[int]] = mapped_column()
     created_at: Mapped[datetime] = mapped_column(default=datetime.utcnow())
     status: Mapped[RatingStatus] = mapped_column(default=RatingStatus.PENDING)
 

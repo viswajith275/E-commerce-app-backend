@@ -66,13 +66,15 @@ def Fetch_My_Items(current_user: UserDep, db: SessionDep, skip: int = Query(defa
 @item_routes.get('/{id}', response_model=UniqueItemBase)
 def Fetch_One_Item(current_user: UserDep, db: SessionDep, id: int):
 
-    item = db.query(Item).filter(Item.status == ItemStatus.ACTIVE, Item.id == id).first()
+    item = db.query(Item).filter(Item.id == id).first()
 
     if not item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='No items found!')
     
     primary_photo_path = db.query(ItemImage).filter(ItemImage.is_primary == True, ItemImage.item_id == item.id).first()
 
+    if item.status == ItemStatus.SOLD and item.seller_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='No items found!')
 
     return {
         'id': item.id,
