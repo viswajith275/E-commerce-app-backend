@@ -107,7 +107,7 @@ async def Createt_Item(current_user: UserDep,
     pending_rating = db.query(Rating).filter(Rating.rater_id == current_user.id, Rating.status == RatingStatus.PENDING).first()
 
     if pending_rating:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Complete pending ratings to create a bid!")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Complete pending ratings to create a Item!")
     
     
     if price < 0:

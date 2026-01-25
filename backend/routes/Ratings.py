@@ -68,7 +68,7 @@ def Update_Rating(current_user: UserDep, db: SessionDep, rating_data: RatingCrea
 
     db.commit()
 
-    rating.rated_user.rating = round(current_user.total_rating / current_user.rating_count, 2) 
+    rating.rated_user.rating = round(rating.rated_user.total_rating / rating.rated_user.rating_count, 2) 
 
     db.commit()
 
