@@ -225,8 +225,8 @@ class User(Base):
     tokens: Mapped[List["UserToken"]] = relationship(back_populates='user', cascade='all, delete-orphan')
     listed_items: Mapped[List["Item"]] = relationship(back_populates="seller", cascade="all, delete-orphan")
     all_bids: Mapped[List["Bid"]] = relationship(back_populates='bider', cascade='all, delete-orphan')
-    selled_item_transactions: Mapped[List[Transaction]] = relationship(foreign_keys="[Transaction.seller_id]", back_populates='seller')
-    buyed_item_transactions: Mapped[List[Transaction]] = relationship(foreign_keys="[Transaction.bider_id]", back_populates='bider')
+    selled_item_transactions: Mapped[List["Transaction"]] = relationship(foreign_keys="[Transaction.seller_id]", back_populates='seller')
+    buyed_item_transactions: Mapped[List["Transaction"]] = relationship(foreign_keys="[Transaction.bider_id]", back_populates='bider')
 
 
 #User Token data dumping table (have to make a auto cleanup script to clear every week or so)
