@@ -3,7 +3,7 @@ from typing import List
 from backend.database import SessionDep
 from backend.oauth import UserDep
 from backend.config import BIAS_FACTOR
-from backend.models import Rating, RatingBase, RatingStatus, RatingCreate, TransactionStatus
+from backend.models import Rating, RatingBase, RatingStatus, RatingCreate, TransactionStatus, User
 
 
 rating_routes = APIRouter(prefix='/ratings', tags=['Rating_Paths'])
@@ -62,13 +62,13 @@ def Update_Rating(current_user: UserDep, db: SessionDep, rating_data: RatingCrea
     else:
         weight = 1
 
-    current_user.rating_count += weight
-    current_user.total_rating += (rating_data.rated_score * weight)
+    rating.rated_user.rating_count += weight
+    rating.rated_user.total_rating += (rating_data.rated_score * weight)
 
 
     db.commit()
 
-    current_user.rating = round(current_user.total_rating / current_user.rating_count, 2) 
+    rating.rated_user.rating = round(current_user.total_rating / current_user.rating_count, 2) 
 
     db.commit()
 

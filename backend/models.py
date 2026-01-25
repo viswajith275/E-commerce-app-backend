@@ -128,7 +128,7 @@ class UserCreate(BaseModel):
 class RatingBase(BaseModel):
     id: int
     rated_username: str
-    rated_score: int
+    rated_score: Optional[int]
     rating_status: RatingStatus
 
 class RatingCreate(BaseModel):
@@ -331,7 +331,7 @@ class Rating(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    trasaction_id: Mapped[int] = mapped_column(ForeignKey('transactions.id'))
+    transaction_id: Mapped[int] = mapped_column(ForeignKey('transactions.id'))
     rater_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
     rated_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
 
