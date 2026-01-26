@@ -19,7 +19,9 @@ def Fetch_All_Transactions(current_user: UserDep, db: SessionDep):
     for transaction in transactions:
         result.append({
             "seller_username": transaction.seller.username,
+            "seller_phone_no": transaction.seller.phone_no,
             "buyer_username": transaction.bider.username,
+            "buyer_phone_no": transaction.bider.phone_no,
             "final_price": transaction.final_price,
             "status": transaction.status
         })
@@ -66,5 +68,5 @@ def Create_Transaction(current_user: UserDep, db: SessionDep, transaction_data: 
             'phone_no': new_transaction.bider.phone_no
         }
     except Exception as e:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Transction failed! because of {str(e)}")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Transction failed!")
     

@@ -144,7 +144,9 @@ class RatingCreate(BaseModel):
 
 class TransactionBase(BaseModel):
     seller_username: str
+    seller_phone_no: str
     buyer_username: str
+    buyer_phone_no: str
     final_price: float
     status: TransactionStatus
 
