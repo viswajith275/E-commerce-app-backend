@@ -19,7 +19,7 @@ def Fetch_All_Items(current_user: UserDep, db: SessionDep, skip: int = Query(def
 
     for item in items:
 
-        primary_photo_path = db.query(ItemImage).filter(ItemImage.is_primary == True, ItemImage.item_id == item.id).first()
+        primary_photo_path = db.query(ItemImage).filter(ItemImage.is_primary, ItemImage.item_id == item.id).first()
 
         result.append({
         'id': item.id,
@@ -47,7 +47,7 @@ def Fetch_My_Items(current_user: UserDep, db: SessionDep, skip: int = Query(defa
 
     for item in items:
 
-        primary_photo_path = db.query(ItemImage).filter(ItemImage.item_id == item.id, ItemImage.is_primary == True).first()
+        primary_photo_path = db.query(ItemImage).filter(ItemImage.item_id == item.id, ItemImage.is_primary).first()
 
         result.append({
         'id': item.id,
@@ -71,7 +71,7 @@ def Fetch_One_Item(current_user: UserDep, db: SessionDep, id: int):
     if not item:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='No items found!')
     
-    primary_photo_path = db.query(ItemImage).filter(ItemImage.is_primary == True, ItemImage.item_id == item.id).first()
+    primary_photo_path = db.query(ItemImage).filter(ItemImage.is_primary, ItemImage.item_id == item.id).first()
 
     if item.status == ItemStatus.SOLD and item.seller_id != current_user.id:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='No items found!')
