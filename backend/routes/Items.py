@@ -8,7 +8,7 @@ from backend.models import Item, ItemBase, UniqueItemBase, ItemStatus, ItemImage
 item_routes = APIRouter(prefix='/items', tags=['Item_Paths'])
 
 @item_routes.get('/feed', response_model=List[ItemBase])
-def Fetch_All_Items(current_user: UserDep, db: SessionDep, skip: int = Query(default=0, ge=0, description="No of items to skip"), limit: int = Query(default=10, ge=1, le=50, description="No of items needed")):
+def Fetch_All_Items(db: SessionDep, skip: int = Query(default=0, ge=0, description="No of items to skip"), limit: int = Query(default=10, ge=1, le=50, description="No of items needed")):
 
     items = db.query(Item).filter(Item.status == ItemStatus.ACTIVE).order_by(Item.created_at.desc()).offset(skip).limit(limit).all() #have to change the ordering to catagory or something with query variable
     

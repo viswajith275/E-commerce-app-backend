@@ -9,7 +9,7 @@ bid_routes = APIRouter(prefix='/bids', tags=['Bid_Paths'])
 @bid_routes.get('/mybids', response_model=List[MyBidBase])
 def Fetch_My_Bids(current_user: UserDep, db: SessionDep, skip: int = Query(default=0, ge=0, description="No of bids to skip!"), limit: int = Query(default=10, ge=1, le=50, description="No of bids after skips")):
 
-    bids = db.query(Bid).filter(Bid.bider_id == current_user.id).order_by(Bid.created_at.desc()).offset(skip).limit(limit).all() #have to change the ordering to catagory or something with query variable
+    bids = db.query(Bid).filter(Bid.bider_id == current_user.id).order_by(Bid.created_at.desc()).offset(skip).limit(limit).all()
 
 
     if not bids:
@@ -20,7 +20,6 @@ def Fetch_My_Bids(current_user: UserDep, db: SessionDep, skip: int = Query(defau
     for bid in bids:
         result.append({
             'id': bid.id,
-            
             'bid_price': bid.bid_price,
             'username': bid.bider.username,
             'rating': bid.bider.rating,
@@ -49,7 +48,7 @@ def Create_Bid(current_user: UserDep, db: SessionDep, bid_data: BidCreate):
     exist = db.query(Bid).filter(Bid.bider_id == current_user.id, Bid.item_id == bid_data.item_id, Bid.status == BidStatus.PENDING).first()
 
     if exist:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="You cant place multiple bids on the same item!")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="You cant place multiple bids on the same item!")
     
     new_bid = Bid(bider_id=current_user.id, item_id=item.id, bid_price=bid_data.bid_price)
 
