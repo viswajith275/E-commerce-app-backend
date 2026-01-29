@@ -45,6 +45,9 @@ def Create_Bid(current_user: UserDep, db: SessionDep, bid_data: BidCreate):
     if item.seller_id == current_user.id:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot place bid on your own item!")
     
+    if bid_data.bid_price < item.price:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Bid amount should be greater than the initial price!")
+    
     exist = db.query(Bid).filter(Bid.bider_id == current_user.id, Bid.item_id == bid_data.item_id, Bid.status == BidStatus.PENDING).first()
 
     if exist:
@@ -70,6 +73,9 @@ def Update_Bid(current_user: UserDep, db: SessionDep, id: int, bid_data: BidUpda
 
     if bid is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Bid not found!")
+    
+    if bid_data.bid_price < bid.item.price:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Bid amount should be greater than the initial price!")
     
     bid.bid_price = bid_data.bid_price
 
