@@ -24,6 +24,7 @@ def Fetch_All_Items(db: SessionDep, skip: int = Query(default=0, ge=0, descripti
         result.append({
         'id': item.id,
         'seller_id': item.seller_id,
+        'username': item.seller.username,
         'title': item.title,
         'price': item.price,
         'description': item.description,
@@ -52,6 +53,7 @@ def Fetch_My_Items(current_user: UserDep, db: SessionDep, skip: int = Query(defa
         result.append({
         'id': item.id,
         'seller_id': item.seller_id,
+        'username': item.seller.username,
         'title': item.title,
         'price': item.price,
         'description': item.description,
@@ -79,6 +81,7 @@ def Fetch_One_Item(current_user: UserDep, db: SessionDep, id: int):
     return {
         'id': item.id,
         'seller_id': item.seller_id,
+        'username': item.seller.username,
         'title': item.title,
         'price': item.price,
         'description':item.description,

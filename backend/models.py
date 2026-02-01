@@ -194,6 +194,7 @@ class BidUpdate(BaseModel):
 class ItemBase(BaseModel):
     id: int
     seller_id: int
+    username: str
     title: str
     description: str
     price: float
