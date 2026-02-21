@@ -194,6 +194,7 @@ class BidUpdate(BaseModel):
 class ItemBase(BaseModel):
     id: int
     seller_id: int
+    seller_rating: float
     username: str
     title: str
     description: str
@@ -240,6 +241,7 @@ class UserToken(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
 
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    disabled: Mapped[bool] = mapped_column(default=False)
 
     access_key: Mapped[Optional[str]] = mapped_column(nullable=True) #change when making access statable object
     refresh_key: Mapped[str] = mapped_column()
