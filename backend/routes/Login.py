@@ -1,47 +1,85 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Response, Request
-from typing import Annotated
-from sqlalchemy import or_
-from datetime import datetime, timedelta
-from fastapi.security import OAuth2PasswordRequestForm
-from backend.config import ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS
-from backend.oauth import create_token, get_password_hash, verify_password, decode_token, UserDep
-from backend.models import UserCreate, User, UsersBase, UserToken
-from backend.database import SessionDep
 import secrets
+from datetime import datetime, timedelta
+from typing import Annotated
 
-#creating a login route
-login_routes = APIRouter(tags=['Authentication'])
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi.security import OAuth2PasswordRequestForm
+from sqlalchemy import or_
 
-#sigh up endpoint
-@login_routes.post('/register', response_model=UsersBase)
+from backend.config import ACCESS_TOKEN_EXPIRE_MINUTES, REFRESH_TOKEN_EXPIRE_DAYS
+from backend.database import SessionDep
+from backend.models import User, UserCreate, UsersBase, UserToken
+from backend.oauth import (
+    UserDep,
+    create_token,
+    decode_token,
+    get_password_hash,
+    verify_password,
+)
+
+# creating a login route
+login_routes = APIRouter(tags=["Authentication"])
+
+
+# sigh up endpoint
+@login_routes.post("/register", response_model=UsersBase)
 def register_user(db: SessionDep, user: UserCreate, request: Request):
-    exists = db.query(User).filter(or_(User.username == user.username, User.email == user.email, User.phone_no == user.phone_no)).first()
+    exists = (
+        db.query(User)
+        .filter(
+            or_(
+                User.username == user.username,
+                User.email == user.email,
+                User.phone_no == user.phone_no,
+            )
+        )
+        .first()
+    )
 
-    #checking if the user exists
+    # checking if the user exists
     if exists:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Username or email or phoneno already registered!')
-    
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username or email or phoneno already registered!",
+        )
+
     hashed_pass = get_password_hash(user.password)
-    new_user = User(username=user.username, hashed_password=hashed_pass, email=user.email, phone_no=user.phone_no)
+    new_user = User(
+        username=user.username,
+        hashed_password=hashed_pass,
+        email=user.email,
+        phone_no=user.phone_no,
+    )
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
 
     return new_user
 
-#login endpoint
-@login_routes.post('/login', response_model=UsersBase)
-async def login_for_access_token(db: SessionDep,response: Response , form_data: Annotated[OAuth2PasswordRequestForm, Depends()], request: Request):
-    
+
+# login endpoint
+@login_routes.post("/login", response_model=UsersBase)
+async def login_for_access_token(
+    db: SessionDep,
+    response: Response,
+    form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
+    request: Request,
+):
+
     user = db.query(User).filter(User.username == form_data.username).first()
 
     if not user or not verify_password(form_data.password, user.hashed_password):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Incorrect username or password!')
-    
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Incorrect username or password!",
+        )
+
     session_secret = secrets.token_urlsafe(32)
     expires_at = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
-    token = UserToken(user_id=user.id, expires_at=expires_at, refresh_key=session_secret)
+    token = UserToken(
+        user_id=user.id, expires_at=expires_at, refresh_key=session_secret
+    )
 
     db.add(token)
     db.commit()
@@ -49,58 +87,78 @@ async def login_for_access_token(db: SessionDep,response: Response , form_data: 
 
     access_token = create_token(
         user_id=user.id,
-        token_type='access',
+        token_type="access",
         expires_time=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
     )
 
     refresh_token = create_token(
         user_id=user.id,
-        token_type='refresh',
+        token_type="refresh",
         expires_time=timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
         unique_id=str(token.id),
-        secret=session_secret
+        secret=session_secret,
     )
 
     response.set_cookie(
-        key='access_token', value=f"Bearer {access_token}", httponly=True, secure=False, samesite="lax"
+        key="access_token",
+        value=f"Bearer {access_token}",
+        httponly=True,
+        secure=False,
+        samesite="lax",
     )
 
     response.set_cookie(
-        key='refresh_token', value=refresh_token, httponly=True, secure=False, samesite="lax"
+        key="refresh_token",
+        value=refresh_token,
+        httponly=True,
+        secure=False,
+        samesite="lax",
     )
 
     return user
-#refreshing the access and refresh tokens
-@login_routes.post('/refresh')
+
+
+# refreshing the access and refresh tokens
+@login_routes.post("/refresh")
 def refresh_tokens(request: Request, response: Response, db: SessionDep):
-    
-    refresh_token = request.cookies.get('refresh_token')
+
+    refresh_token = request.cookies.get("refresh_token")
     if not refresh_token:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Refresh token is missing!')
-    
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Refresh token is missing!"
+        )
+
     try:
         payload = decode_token(refresh_token)
 
-        token_type = payload.get('type')
-        user_id = payload.get('uid')
-        secret = payload.get('secret')
+        token_type = payload.get("type")
+        user_id = payload.get("uid")
+        secret = payload.get("secret")
 
         if token_type != "refresh":
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=f'Invalid Token {token_type}')
-        
-        token_id = int(payload.get('jti'))
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Invalid Token {token_type}",
+            )
+
+        token_id = int(payload.get("jti"))
 
         token = db.query(UserToken).filter(UserToken.id == token_id).first()
 
         if not token or token.refresh_key != secret:
-            #token may be stolen
-            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Token revoked or Invalid')
-        
+            # token may be stolen
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token revoked or Invalid",
+            )
+
         session_secret = secrets.token_urlsafe(32)
-        
+
         new_expires_at = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)
 
-        new_token = UserToken(user_id=user_id, expires_at=new_expires_at, refresh_key=session_secret)
+        new_token = UserToken(
+            user_id=user_id, expires_at=new_expires_at, refresh_key=session_secret
+        )
 
         db.add(new_token)
         db.commit()
@@ -108,7 +166,7 @@ def refresh_tokens(request: Request, response: Response, db: SessionDep):
 
         access_token = create_token(
             user_id=user_id,
-            token_type='access',
+            token_type="access",
             expires_time=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES),
         )
 
@@ -117,40 +175,50 @@ def refresh_tokens(request: Request, response: Response, db: SessionDep):
             token_type="refresh",
             expires_time=timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS),
             unique_id=str(new_token.id),
-            secret=session_secret
+            secret=session_secret,
         )
 
         response.set_cookie(
-            key='access_token', value=f"Bearer {access_token}", httponly=True, secure=False, samesite="lax"
+            key="access_token",
+            value=f"Bearer {access_token}",
+            httponly=True,
+            secure=False,
+            samesite="lax",
         )
 
         response.set_cookie(
-            key='refresh_token', value=refresh_token, httponly=True, secure=False ,samesite="lax"
+            key="refresh_token",
+            value=refresh_token,
+            httponly=True,
+            secure=False,
+            samesite="lax",
         )
 
-        return {'message': 'Token refreshed'}
+        return {"message": "Token refreshed"}
     except:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid Token')
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid Token"
+        )
 
 
-@login_routes.post('/logout')
+@login_routes.post("/logout")
 def logout_user(request: Request, response: Response, db: SessionDep):
 
-    refresh_token = request.cookies.get('refresh_token')
+    refresh_token = request.cookies.get("refresh_token")
 
     if refresh_token:
-    
         payload = decode_token(refresh_token)
-        token_id = int(payload.get('jti'))
+        token_id = int(payload.get("jti"))
 
         db.query(UserToken).filter(UserToken.id == token_id).delete()
         db.commit()
-        
-    response.delete_cookie('access_token')
-    response.delete_cookie('refresh_token')
 
-    return {'message': "Logged out successfully"}
+    response.delete_cookie("access_token")
+    response.delete_cookie("refresh_token")
 
-@login_routes.get('/username')
-def fetch_username(current_user: UserDep):
-    return {'username': current_user.username}
+    return {"message": "Logged out successfully"}
+
+
+@login_routes.get("/me", response_model=UsersBase)
+def fetch_username(current_user: UserDep, db: SessionDep):
+    return current_user

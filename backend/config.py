@@ -1,11 +1,12 @@
-from dotenv import load_dotenv
 import os
 from pathlib import Path
+
+from dotenv import load_dotenv
 
 # load .env located next to this file
 load_dotenv(dotenv_path=Path(__file__).parent / ".env")
 
-#Fetching the env variables
+# Fetching the env variables
 SQL_DATABASE_URL = os.getenv("DATABASE_URL")
 SECRET_KEY = os.getenv("SECRET_KEY")
 UPLOAD_DIRECTORY = os.getenv("UPLOAD_DIRECTORY")
@@ -14,4 +15,4 @@ IMAGE_SERVER_ADRESS = os.getenv("IMAGE_SERVER_ADRESS")
 BIAS_FACTOR = float(os.getenv("BIAS_FACTOR"))
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES"))
-REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv('REFRESH_TOKEN_EXPIRE_DAYS'))
+REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS"))
