@@ -91,10 +91,17 @@ async def get_current_user(request: Request, db: SessionDep):
 
 # checking the user is not banned or revoked by the admin
 async def get_current_active_user(
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: Annotated[User | None, Depends(get_current_user)],
 ):
+    if current_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found!"
+        )
+
     if current_user.disabled:
-        raise HTTPException(status_code=400, detail="Inactive user")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user"
+        )
     return current_user
 
 

@@ -143,7 +143,7 @@ def Fetch_One_Item(current_user: UserDep, db: SessionDep, id: int):
     return {
         "id": item.id,
         "seller_id": item.seller_id,
-        "seller_ratings": item.seller.rating,
+        "seller_rating": item.seller.rating,
         "username": item.seller.username,
         "title": item.title,
         "price": item.price,
