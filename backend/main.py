@@ -28,12 +28,11 @@ os.makedirs(new_path, exist_ok=True)
 
 app.mount(path="/static", app=StaticFiles(directory="static"), name="static")
 
-origins = ["http://localhost:5173", "http://localhost:8081"]
 
 # Added the local react server to the allowlist
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
